@@ -7,9 +7,8 @@ const cors = require('cors');
 
 // import files needed
 const { typeDefs, resolvers } = require('./schemas');
-const db = require('./config/connections');
+const db = require('./config/connection');
 const { authMiddleware } = require('./utils/auth');
-const { stripVTControlCharacters } = require('util');
 
 // set up port and middleware
 const PORT = process.env.PORT || 3001;
@@ -48,3 +47,18 @@ if (process.env.NODE_ENV === 'production') {
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
+
+// set up apollo server
+const startApolloServer = async (typeDefs, resolvers) => {
+    await server.start();
+    server.applyMiddleware({ app });
+
+    db.once('open', () => {
+        app.listen(PORT, () => {
+            console.log(`API server running on port ${PORT}!`);
+            console.log(`Use graphQL at http://localhost:${PORT}${server.graphqlPath}`);
+        })
+    })
+};
+
+startApolloServer(typeDefs, resolvers);
