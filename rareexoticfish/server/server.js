@@ -9,7 +9,6 @@ const cors = require('cors');
 const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
 const { authMiddleware } = require('./utils/auth');
-const { stripVTControlCharacters } = require('util');
 
 // set up port and middleware
 const PORT = process.env.PORT || 3001;
@@ -50,8 +49,9 @@ app.get('*', (req, res) => {
 });
 
 // set up apollo server
-const startApolloServer = async (typeDefs, resolvers ) => {
+const startApolloServer = async (typeDefs, resolvers) => {
     await server.start();
+    server.applyMiddleware({ app });
 
     db.once('open', () => {
         app.listen(PORT, () => {
@@ -59,4 +59,6 @@ const startApolloServer = async (typeDefs, resolvers ) => {
             console.log(`Use graphQL at http://localhost:${PORT}${server.graphqlPath}`);
         })
     })
-}
+};
+
+startApolloServer(typeDefs, resolvers);
