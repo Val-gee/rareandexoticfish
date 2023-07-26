@@ -22,7 +22,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 // stripe setup
-
 app.post('/checkout', async (req, res) => {
     console.log("server.js file/app.post/checkout", req.body.items);
     const items = req.body.items;
@@ -39,12 +38,14 @@ app.post('/checkout', async (req, res) => {
     //add stripe session checkout
     // response.send code block
 })
+
 // set up routes
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/build')));
 }
 
 app.get('*', (req, res) => {
+    console.log(__dirname);
     res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
 
