@@ -8,11 +8,7 @@ lastName: String!
 email: String!
 password: String!
 adminAccess: Boolean!
-}
-
-type Auth {
-token: ID!,
-user: User,
+orders: [Order]
 }
 
 type Category {
@@ -36,18 +32,31 @@ purchaseDate: String,
 products: [Product]
 }
 
+type Auth {
+token: ID!,
+user: User,
+}
+
 type Query {
+allUsers: [User]
 user(_id:ID!): User
-users: [User]
+user(email: String!): User
+allCategories: [Category]
+categoryByName(name: String!): Category
+allProducts: [Product]
+productByName(name: String!): Product
+allOrders: [Order]
+orderById(_id: ID!): Order
+orderByDate(purchaseDate: String!): Order
 }
 
 type Mutation {
 addUser(
-firstName: String!,
-lastName: String!,
-email: String!,
-password: String!,
-adminAccess: Boolean!
+    firstName: String!,
+    lastName: String!,
+    email: String!,
+    password: String!,
+    adminAccess: Boolean!
 ): Auth
 login(email: String!, password: String!): Auth
 addOrder(products: [ID]!): Order

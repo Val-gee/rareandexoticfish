@@ -32,7 +32,13 @@ const userSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
-    }
+    },
+    orders: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Order'
+        }
+    ]
 });
 
 userSchema.pre('save', async (next) =>{
