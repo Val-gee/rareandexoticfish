@@ -7,7 +7,7 @@ const resolvers = {
     Query: {
         user: async (parent, { _id }) => {
             const user = await User.findbyId(_id);
-            return User;
+            return user;
         }
     }
 };

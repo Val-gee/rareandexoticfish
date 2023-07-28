@@ -8,7 +8,7 @@ const cors = require('cors');
 // import files needed
 const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
-const { authMiddleware } = require('./utils/auth');
+const { authMiddleware } = require('./utils/auth')
 
 // set up port and middleware
 const PORT = process.env.PORT || 3001;
