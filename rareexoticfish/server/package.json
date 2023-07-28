@@ -5,9 +5,9 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
-        "test": "echo \"Eroor: no test specified\" && exit 1",
+        "test": "echo \"Error: no test specified\" && exit 1",
         "watch": "nodemon",
-        "seed": "nase utils/seeds/seed.js"
+        "seed": "node utils/seeders/seed.js"
     },
     "keywords": [],
     "author": "Valentina Guevara",
@@ -21,7 +21,7 @@
         "mongoose": "^6.9.1",
         "stripe": "^11.10.0"
     },
-    "devdependencies": {
+    "devDependencies": {
         "nodemon": "^2.0.2"
     }
 }

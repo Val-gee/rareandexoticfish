@@ -1,16 +1,12 @@
-// import packages needed
 const express = require('express');
 const { ApolloServer } = require('apollo-server-express');
 const path = require('path');
 require('dotenv').config();
-const cors = require('cors');
 
-// import files needed
 const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
-const { authMiddleware } = require('./utils/auth')
+const { authMiddleware } = require('./utils/auth');
 
-// set up port and middleware
 const PORT = process.env.PORT || 3001;
 const app = express();
 const server = new ApolloServer({
@@ -18,16 +14,29 @@ const server = new ApolloServer({
     resolvers,
     context: authMiddleware,
 });
+
+var cors = require('cors');
+
+const stripe = require('stripe')('enter your stripe key here');
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// stripe setup
-app.post('/checkout', async (req, res) => {
-    console.log("server.js file/app.post/checkout", req.body.items);
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/build')));
+}
+
+// this handler code isnt neccessary when using frameworks/libs like React and Angular because they handle the routing for you!!
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../client/public/index.html'));
+// });
+
+app.post("/checkout", async (req, res) => {
+    
+    console.log(req.body);
     const items = req.body.items;
 
     let lineItems = [];
-
     items.forEach((item) => {
         lineItems.push({
             price: item.id,
@@ -35,21 +44,20 @@ app.post('/checkout', async (req, res) => {
         });
     });
 
-    //add stripe session checkout
-    // response.send code block
-})
+    const session = await stripe.checkout.sessions.create({
+        line_items: lineItems,
+        mode: "payment",
+        success_url: "http://localhost:3000/success",
+        cancel_url: "http://localhost:3000/cancel",
+    });
 
-// set up routes
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/build')));
-}
-
-app.get('*', (req, res) => {
-    console.log(__dirname);
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+    res.send(
+        JSON.stringify({
+            url: session.url,
+        })
+    );
 });
 
-// set up apollo server
 const startApolloServer = async (typeDefs, resolvers) => {
     await server.start();
     server.applyMiddleware({ app });
@@ -57,7 +65,7 @@ const startApolloServer = async (typeDefs, resolvers) => {
     db.once('open', () => {
         app.listen(PORT, () => {
             console.log(`API server running on port ${PORT}!`);
-            console.log(`Use graphQL at http://localhost:${PORT}${server.graphqlPath}`);
+            console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
         })
     })
 };
