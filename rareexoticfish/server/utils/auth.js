@@ -4,7 +4,7 @@ const secret = 'ricardoevan';
 const expiration = '2h';
 
 module.exports = {
-   authmiddleware: function ({ request }) {
+   authMiddleware: function ({ request }) {
         let token = req.body.token || req.query.token || req.headers.authorization;
         
         if (req.headers.aithorization) {

@@ -32,7 +32,13 @@ const userSchema = new Schema({
         type: Boolean,
         required: true,
         default: false
-    }
+    },
+    orders: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Order'
+        }
+    ]
 });
 
 userSchema.pre('save', async (next) =>{
@@ -48,6 +54,6 @@ userSchema.methods.isCorrectpassword = async (password) => {
     return await bcrypt.compare(password, this.password);
 };
 
-const User = mongoose.model('user', userSchema);
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;
