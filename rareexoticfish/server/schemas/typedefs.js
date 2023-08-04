@@ -39,8 +39,8 @@ user: User,
 
 type Query {
 allUsers: [User]
-user(_id:ID!): User
-user(email: String!): User
+userById(_id:ID!): User
+userByEmail(email: String!): User
 allCategories: [Category]
 categoryByName(name: String!): Category
 allProducts: [Product]
@@ -50,7 +50,7 @@ orderById(_id: ID!): Order
 orderByDate(purchaseDate: String!): Order
 }
 
-type Mutation {
+type Mutations {
 addUser(
     firstName: String!,
     lastName: String!,

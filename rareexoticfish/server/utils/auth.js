@@ -4,7 +4,7 @@ const secret = 'ricardoevan';
 const expiration = '2h';
 
 module.exports = {
-   authMiddleware: function ({ request }) {
+   authMiddleware: function ({ req }) {
         let token = req.body.token || req.query.token || req.headers.authorization;
         
         if (req.headers.aithorization) {
@@ -12,8 +12,8 @@ module.exports = {
         }
         
         if (!token) {
-            return request;
-        };
+            return req;
+        }
         
         try {
             const {data} = JsonWebTokens.verify(token, secret, { maxAge: expiration });
