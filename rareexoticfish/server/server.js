@@ -13,6 +13,7 @@ const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: authMiddleware,
+    introspection: true
 });
 
 var cors = require('cors');
@@ -21,6 +22,7 @@ const stripe = require('stripe')('enter your stripe key here');
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(cors());
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/build')));

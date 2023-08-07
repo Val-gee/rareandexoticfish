@@ -26,6 +26,15 @@ category: [Category],
 image: String!
 }
 
+input productInput {
+name: String!,
+description: String!,
+price: Float!,
+quantity: Int!,
+category: [ID],
+image: String!
+}
+
 type Order {
 _id: ID,
 purchaseDate: String,
@@ -39,8 +48,8 @@ user: User,
 
 type Query {
 allUsers: [User]
-user(_id:ID!): User
-user(email: String!): User
+userById(_id:ID!): User
+userByEmail(email: String!): User
 allCategories: [Category]
 categoryByName(name: String!): Category
 allProducts: [Product]
@@ -60,6 +69,8 @@ addUser(
 ): Auth
 login(email: String!, password: String!): Auth
 addOrder(products: [ID]!): Order
+addProduct(productInput: productInput!): Product
+removeProduct(_id: ID!, name: String!): Product
 }
 `
 
