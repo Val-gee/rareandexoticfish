@@ -16,6 +16,10 @@ _id: ID,
 name: String!
 }
 
+input categoryInput {
+name: String!
+}
+
 type Product {
 _id: ID,
 name: String!,
@@ -71,6 +75,8 @@ login(email: String!, password: String!): Auth
 addOrder(products: [ID]!): Order
 addProduct(productInput: productInput!): Product
 removeProduct(_id: ID!, name: String!): Product
+addCategory(categoryInput: categoryInput!): Category
+removeCategory(name: String!): Category
 }
 `
 
