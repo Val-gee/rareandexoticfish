@@ -11,31 +11,36 @@ const resolvers = {
                 .populate('orders');
             return users;
         },
+        //works
         userById: async (parent, { _id }) => {
-            const userById = await User.findbyId(_id)
+            const userById = await User.findById(_id)
                 .populate('orders');
             return userById;
         },
+        //works
         userByEmail: async (parent, { email }) => {
-            const userByEmail = await User.find({ "email": email })
+            const userByEmail = await User.findOne({ "email": email })
                 .populate('orders');
             return userByEmail;;
         },
+        //works
         allCategories: async () => {
             const categories = await Category.find();
             return categories;
         },
+        //Works
         categoryByName: async (parent, { name }) => {
-            const categoryByName = await Category.find({ "name": name });
+            const categoryByName = await Category.findOne({ "name": name });
             return categoryByName;
         },
+        //works
         allProducts: async () => {
             const products = await Product.find()
                 .populate('category');
             return products;
         },
         productByName: async (parent, { name }) => {
-            const productByName = await Product.find({ "name": name })
+            const productByName = await Product.findOne({ "name": name })
                 .populate('category');
             return productByName;
         },
@@ -62,6 +67,7 @@ const resolvers = {
             const token = signToken(addUser);
             return { token, user: addUser };
         },
+        //works
         login: async (parent, { email, password }) => {
             console.log("Logging in...");
             const user = await User.findOne({ email });
@@ -70,15 +76,14 @@ const resolvers = {
                 throw new AuthenticationError("Incorrect credentials");
             }
 
-            const correctPw = await User.isCorrectPassword(password);
+            const correctPw = await user.isCorrectPassword(password);
             if (!correctPw) {
                 throw new AuthenticationError("Incorrect credentials");
             }
 
             const token = signToken(user);
             return { token, user };
-        },
-        
+        },   
         addOrder: async (parent, { products }, context) => {
             console.log(context);
             if (context.user) {
@@ -98,7 +103,7 @@ const resolvers = {
                     const newProduct = await Product.create({
                         ...productInput,
                         owner: context.user._id,
-                    });
+                    }).populate(category);
 
                     return newProduct;
                 }
@@ -121,7 +126,41 @@ const resolvers = {
                 }
             } catch(err) {
                 console.log(err);
-                throw new AuthenticationError("Failed to remove Product. resolvers.js.removeproduct.line113")
+                throw new AuthenticationError("Failed to remove Product. resolvers.js.removeproduct.line128")
+            }
+        },
+        //works
+        addCategory: async (parent, { categoryInput }, context) => {
+            console.log(context.user)
+            try {
+                if (context.user) {
+                    const addedCategory = await Category.create({
+                        ...categoryInput,
+                        owner: context.user._id
+                    });
+
+                    return addedCategory;
+                }
+            } catch(err) {
+                console.log(err);
+                throw new AuthenticationError("Failed to create new category. resolvers.js.addCategory")
+            }
+        },
+        //works
+        removeCategory: async (parent, { name }, context) => {
+            console.log(context.user);
+            try{ 
+                if (context.user) {
+                    const removedCategory = await Category.findOneAndDelete({
+                        name: name,
+                        owner: context.user._id
+                    });
+
+                    return removedCategory;
+                }
+            } catch(err) {
+                console.log(err);
+                throw new AuthenticationError("failed to remove category. resolvers.js.removeCategory")
             }
         }
     }

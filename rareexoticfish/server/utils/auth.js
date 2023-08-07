@@ -7,8 +7,8 @@ module.exports = {
    authMiddleware: function ({ req }) {
         let token = req.body.token || req.query.token || req.headers.authorization;
         
-        if (req.headers.aithorization) {
-            token = token.spilt(' ').pop().trim();
+        if (req.headers.authorization) {
+            token = token.split(' ').pop().trim();
         }
         
         if (!token) {
@@ -17,12 +17,12 @@ module.exports = {
         
         try {
             const {data} = JsonWebTokens.verify(token, secret, { maxAge: expiration });
-            request.user = data;
+            req.user = data;
         } catch (err) {
             console.log ('Invalid token/Authorization Error! :', err);
         };
 
-        return request;
+        return req;
     },
     signToken: function ({ firstName, lastName, email, _id, adminAccess = false }) {
         const payload = { firstName, lastName, email, _id, adminAccess };
