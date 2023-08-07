@@ -26,6 +26,15 @@ category: [Category],
 image: String!
 }
 
+input productInput {
+name: String!,
+description: String!,
+price: Float!,
+quantity: Int!,
+category: [ID],
+image: String!
+}
+
 type Order {
 _id: ID,
 purchaseDate: String,
@@ -50,7 +59,7 @@ orderById(_id: ID!): Order
 orderByDate(purchaseDate: String!): Order
 }
 
-type Mutations {
+type Mutation {
 addUser(
     firstName: String!,
     lastName: String!,
@@ -60,6 +69,8 @@ addUser(
 ): Auth
 login(email: String!, password: String!): Auth
 addOrder(products: [ID]!): Order
+addProduct(productInput: productInput!): Product
+removeProduct(_id: ID!, name: String!): Product
 }
 `
 

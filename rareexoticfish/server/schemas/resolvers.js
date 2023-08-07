@@ -5,6 +5,7 @@ const { signToken } = require('../utils/auth.js');
 
 const resolvers = {
     Query: {
+        //works
         allUsers: async () => {
             const users = await User.find()
                 .populate('orders');
@@ -54,17 +55,18 @@ const resolvers = {
             return orderByDate
         }
     },
-    Mutations: {
-        addUser: async (parent, {args}) => {
-            const addUser = await User.create(args);
+    Mutation: {
+        //works
+        addUser: async (parent, { firstName, lastName, email, password }) => {
+            const addUser = await User.create({ firstName, lastName, email, password });
             const token = signToken(addUser);
-            return { token, addUser };
+            return { token, user: addUser };
         },
         login: async (parent, { email, password }) => {
             console.log("Logging in...");
-            const User = await User.findOne({ email });
+            const user = await User.findOne({ email });
 
-            if (!User) {
+            if (!user) {
                 throw new AuthenticationError("Incorrect credentials");
             }
 
@@ -73,9 +75,10 @@ const resolvers = {
                 throw new AuthenticationError("Incorrect credentials");
             }
 
-            const token = signToken(User);
-            return { token, User };
+            const token = signToken(user);
+            return { token, user };
         },
+        
         addOrder: async (parent, { products }, context) => {
             console.log(context);
             if (context.user) {
@@ -87,6 +90,39 @@ const resolvers = {
                 return order;
             }
             throw new AuthenticationError('Must be logged in...');
+        },
+        addProduct: async (parent, { productInput }, context) => {
+            console.log(context.user);
+            try {
+                if (context.user) {
+                    const newProduct = await Product.create({
+                        ...productInput,
+                        owner: context.user._id,
+                    });
+
+                    return newProduct;
+                }
+            } catch(err) {
+                console.log(err);
+                throw new AuthenticationError("Failed to create product. resolvers.js.addProduct.line105");
+            }
+        },
+        removeProduct: async (parent, { _id, name }, context) => {
+            console.log(context.user);
+            try{ 
+                if (context.user) {
+                    const removedProduct = await Product.findOneAndDelete({
+                        _id: _id,
+                        name: name,
+                        owner: context.user._id,
+                    });
+
+                    return removedProduct;
+                }
+            } catch(err) {
+                console.log(err);
+                throw new AuthenticationError("Failed to remove Product. resolvers.js.removeproduct.line113")
+            }
         }
     }
 };
