@@ -8,19 +8,65 @@ const resolvers = {
         //works
         allUsers: async () => {
             const users = await User.find()
-                .populate('orders');
+                .populate('orders')
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products'
+                    }
+                })
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products',
+                        populate: {
+                            path: 'category'
+                        }
+                    }
+                });
             return users;
         },
         //works
         userById: async (parent, { _id }) => {
             const userById = await User.findById(_id)
-                .populate('orders');
+                .populate('orders')
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products'
+                    }
+                })
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products',
+                        populate: {
+                            path: 'category'
+                        }
+                    }
+                });
             return userById;
         },
         //works
         userByEmail: async (parent, { email }) => {
             const userByEmail = await User.findOne({ "email": email })
-                .populate('orders');
+                .populate('orders')
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products'
+                    }
+                })
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products',
+                        populate: {
+                            path: 'category'
+                        }
+                    }
+                });
+            ;
             return userByEmail;;
         },
         //works
@@ -39,25 +85,79 @@ const resolvers = {
                 .populate('category');
             return products;
         },
+        //works
         productByName: async (parent, { name }) => {
             const productByName = await Product.findOne({ "name": name })
                 .populate('category');
             return productByName;
         },
+        //works
         allOrders: async () => {
             const allOrders = await Order.find()
-                .populate('products');
-            return allOrders;
+                .populate('products')
+                .populate({
+                    path: 'products',
+                    populate: {
+                        path: 'category'
+                    }
+                });
+            const formattedOrders = allOrders.map(order => ({
+                ...order._doc,
+                purchaseDate: new Date(order.purchaseDate).toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                }),
+            }));
+
+            // Return data with populated products and formatted purchaseDate
+            return formattedOrders;
         },
+        //works
         orderById: async (parent, { _id }) => {
-            const orderById = await Order.find({ "_id": _id })
-                .populate('products');
-            return orderById;
+            const order = await Order.findById({ _id })
+                .populate('products')
+                .populate({
+                    path: 'products',
+                    populate: {
+                        path: 'category'
+                    }
+                });
+            console.log(order);
+
+            if (!order) {
+                throw new AuthenticationError("Order not found.")
+            }
+
+            const formattedOrderById = {
+                ...order._doc,
+                purchaseDate: new Date(order.purchaseDate).toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                })
+            };
+
+            return formattedOrderById;
         },
+        //works
         orderByDate: async (parent, { purchaseDate }) => {
-            const orderByDate = await Order.find({ "purchaseDate": purchaseDate })
-                .populate('products');
-            return orderByDate
+            const parsedDate = new Date(purchaseDate);
+            const unixPurchaseDate = parsedDate.getTime();
+
+            const startTime = unixPurchaseDate - 1800000; //30 minutes before 
+            const endTime = unixPurchaseDate + 1800000; //30 minutes after
+
+            const orderByDate = await Order.find({
+                "purchaseDate":
+                    { $gte: startTime, $lte: endTime }
+                })
+                .populate('products')
+                .populate({
+                    path: 'products',
+                    populate: {
+                        path: 'category'
+                    }
+                });
+
+            console.log('Order By Date: ',orderByDate)
+            return orderByDate;
         }
     },
     Mutation: {
@@ -83,19 +183,52 @@ const resolvers = {
 
             const token = signToken(user);
             return { token, user };
-        },   
-        addOrder: async (parent, { products }, context) => {
-            console.log(context);
-            if (context.user) {
-                const order = new Order.create({ products });
-                await User.findByIdAndUpdate(context.user._id, {
-                    $push: { orders: order._id}
-                })
-    
-                return order;
-            }
-            throw new AuthenticationError('Must be logged in...');
         },
+        addOrder: async (parent, { products }, context) => {
+            try {
+                if (!context.user) {
+                    throw new AuthenticationError('Must be logged in.');
+                }
+
+                console.log('Context User:', context.user);
+
+                // Create the order
+                const newOrder = await Order.create({
+                    owner: context.user._id,
+                    products: products,
+                    purchaseDate: new Date()
+                });
+
+                console.log('New Order:', newOrder);
+
+                // Update the user's orders array
+                await User.findByIdAndUpdate(context.user._id, {
+                    $push: { orders: newOrder._id },
+                });
+
+                console.log('User updated!');
+
+                // Fetch the created order using its ID and populate the 'products' field
+                const addedOrder = await Order.findById(newOrder._id)
+                    .populate('products')
+                    .populate({ path: 'products', populate: { path: 'category' } })
+                    .exec();
+
+                console.log('Order added successfully!:', addedOrder);
+
+                // Format the purchaseDate to a human-readable string in UTC-4 timezone
+                const formattedPurchaseDate = new Date(addedOrder.purchaseDate).toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                });
+
+                // Return data with populated products and formatted purchaseDate
+                return { ...addedOrder._doc, purchaseDate: formattedPurchaseDate };
+            } catch (err) {
+                console.log(err);
+                throw new AuthenticationError('Failed to create order.');
+            }
+        },
+        //works
         addProduct: async (parent, { productInput }, context) => {
             console.log(context.user);
             try {
@@ -103,31 +236,55 @@ const resolvers = {
                     const newProduct = await Product.create({
                         ...productInput,
                         owner: context.user._id,
-                    }).populate(category);
+                    });
 
-                    return newProduct;
+                    const addedProduct = await newProduct.populate("category");
+
+                    return addedProduct;
                 }
-            } catch(err) {
+            } catch (err) {
                 console.log(err);
                 throw new AuthenticationError("Failed to create product. resolvers.js.addProduct.line105");
             }
         },
+        //works
         removeProduct: async (parent, { _id, name }, context) => {
             console.log(context.user);
-            try{ 
+            try {
                 if (context.user) {
-                    const removedProduct = await Product.findOneAndDelete({
+                    //fetch product to be deleted
+                    const productToDelete = await Product.findOne({
                         _id: _id,
                         name: name,
-                        owner: context.user._id,
-                    });
+                        owner: context.user._id
+                    }).populate("category");
 
-                    return removedProduct;
+                    if (!productToDelete) {
+                        throw new AuthenticationError("No product found.")
+                    }
+                    // delete the product
+                    await productToDelete.remove();
+                    //return the populate product that was deleted
+                    return productToDelete;
                 }
-            } catch(err) {
+            } catch (err) {
                 console.log(err);
-                throw new AuthenticationError("Failed to remove Product. resolvers.js.removeproduct.line128")
+                throw new AuthenticationError("Failed to remove product. resolvers.js file line 119")
             }
+            // try{ 
+            //     if (context.user) {
+            //         const removedProduct = await Product.findOneAndDelete({
+            //             _id: _id,
+            //             name: name,
+            //             owner: context.user._id,
+            //         }).populate('category');
+
+            //         return removedProduct;
+            //     }
+            // } catch(err) {
+            //     console.log(err);
+            //     throw new AuthenticationError("Failed to remove Product. resolvers.js.removeproduct.line128")
+            // }
         },
         //works
         addCategory: async (parent, { categoryInput }, context) => {
@@ -141,7 +298,7 @@ const resolvers = {
 
                     return addedCategory;
                 }
-            } catch(err) {
+            } catch (err) {
                 console.log(err);
                 throw new AuthenticationError("Failed to create new category. resolvers.js.addCategory")
             }
@@ -149,7 +306,7 @@ const resolvers = {
         //works
         removeCategory: async (parent, { name }, context) => {
             console.log(context.user);
-            try{ 
+            try {
                 if (context.user) {
                     const removedCategory = await Category.findOneAndDelete({
                         name: name,
@@ -158,7 +315,7 @@ const resolvers = {
 
                     return removedCategory;
                 }
-            } catch(err) {
+            } catch (err) {
                 console.log(err);
                 throw new AuthenticationError("failed to remove category. resolvers.js.removeCategory")
             }
