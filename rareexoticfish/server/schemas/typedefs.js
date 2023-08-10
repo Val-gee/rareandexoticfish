@@ -60,7 +60,7 @@ allProducts: [Product]
 productByName(name: String!): Product
 allOrders: [Order]
 orderById(_id: ID!): Order
-orderByDate(purchaseDate: String!): Order
+orderByDate(purchaseDate: String!): [Order]
 }
 
 type Mutation {
