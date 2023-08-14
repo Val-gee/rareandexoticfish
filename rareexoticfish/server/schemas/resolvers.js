@@ -147,7 +147,7 @@ const resolvers = {
             const orderByDate = await Order.find({
                 "purchaseDate":
                     { $gte: startTime, $lte: endTime }
-                })
+            })
                 .populate('products')
                 .populate({
                     path: 'products',
@@ -156,8 +156,16 @@ const resolvers = {
                     }
                 });
 
-            console.log('Order By Date: ',orderByDate)
-            return orderByDate;
+            const formattedOrderByDate = orderByDate.map(order => ({
+                ...order._doc,
+                purchaseDate: new Date(order.purchaseDate).toLocaleString('en-US', {
+                    timeZone: 'America/New_York'
+                })
+            }));
+
+            console.log(formattedOrderByDate);
+
+            return formattedOrderByDate;
         }
     },
     Mutation: {
@@ -170,7 +178,25 @@ const resolvers = {
         //works
         login: async (parent, { email, password }) => {
             console.log("Logging in...");
-            const user = await User.findOne({ email });
+            const user = await User.findOne({ email })
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'purchaseDate'
+                    }
+                })
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products'
+                    }
+                })
+                .populate({
+                    path: 'orders.products',
+                    populate: {
+                        path: 'category'
+                    }
+                });
 
             if (!user) {
                 throw new AuthenticationError("Incorrect credentials");
@@ -184,7 +210,7 @@ const resolvers = {
             const token = signToken(user);
             return { token, user };
         },
-        addOrder: async (parent, { products }, context) => {
+        addOrder: async (parent, { products, address }, context) => {
             try {
                 if (!context.user) {
                     throw new AuthenticationError('Must be logged in.');
@@ -196,7 +222,8 @@ const resolvers = {
                 const newOrder = await Order.create({
                     owner: context.user._id,
                     products: products,
-                    purchaseDate: new Date()
+                    purchaseDate: new Date(),
+                    address: address
                 });
 
                 console.log('New Order:', newOrder);
@@ -271,20 +298,6 @@ const resolvers = {
                 console.log(err);
                 throw new AuthenticationError("Failed to remove product. resolvers.js file line 119")
             }
-            // try{ 
-            //     if (context.user) {
-            //         const removedProduct = await Product.findOneAndDelete({
-            //             _id: _id,
-            //             name: name,
-            //             owner: context.user._id,
-            //         }).populate('category');
-
-            //         return removedProduct;
-            //     }
-            // } catch(err) {
-            //     console.log(err);
-            //     throw new AuthenticationError("Failed to remove Product. resolvers.js.removeproduct.line128")
-            // }
         },
         //works
         addCategory: async (parent, { categoryInput }, context) => {

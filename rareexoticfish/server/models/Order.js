@@ -11,7 +11,11 @@ const orderSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'Product'
         }
-    ]
+    ],
+    address: {
+        type: String,
+        required: true
+    }
 });
 
 const Order = mongoose.model('Order', orderSchema);
