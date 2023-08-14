@@ -157,6 +157,7 @@ query AllOrders {
       }
       image
     }
+    address
   }
 }
 `
@@ -178,6 +179,7 @@ query OrderById($id: ID!) {
       }
       image
     }
+    address
   }
 }
 `
@@ -199,6 +201,7 @@ query OrderByDate($purchaseDate: String!) {
       }
       image
     }
+    address
   }
 }
 `

@@ -43,6 +43,7 @@ type Order {
 _id: ID,
 purchaseDate: String,
 products: [Product]
+address: String
 }
 
 type Auth {
@@ -72,7 +73,7 @@ addUser(
     adminAccess: Boolean!
 ): Auth
 login(email: String!, password: String!): Auth
-addOrder(products: [ID]!): Order
+addOrder(products: [ID]!, address: String!): Order
 addProduct(productInput: productInput!): Product
 removeProduct(_id: ID!, name: String!): Product
 addCategory(categoryInput: categoryInput!): Category

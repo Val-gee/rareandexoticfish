@@ -178,7 +178,25 @@ const resolvers = {
         //works
         login: async (parent, { email, password }) => {
             console.log("Logging in...");
-            const user = await User.findOne({ email });
+            const user = await User.findOne({ email })
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'purchaseDate'
+                    }
+                })
+                .populate({
+                    path: 'orders',
+                    populate: {
+                        path: 'products'
+                    }
+                })
+                .populate({
+                    path: 'orders.products',
+                    populate: {
+                        path: 'category'
+                    }
+                });
 
             if (!user) {
                 throw new AuthenticationError("Incorrect credentials");
@@ -192,7 +210,7 @@ const resolvers = {
             const token = signToken(user);
             return { token, user };
         },
-        addOrder: async (parent, { products }, context) => {
+        addOrder: async (parent, { products, address }, context) => {
             try {
                 if (!context.user) {
                     throw new AuthenticationError('Must be logged in.');
@@ -204,7 +222,8 @@ const resolvers = {
                 const newOrder = await Order.create({
                     owner: context.user._id,
                     products: products,
-                    purchaseDate: new Date()
+                    purchaseDate: new Date(),
+                    address: address
                 });
 
                 console.log('New Order:', newOrder);
