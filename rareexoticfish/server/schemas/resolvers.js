@@ -147,7 +147,7 @@ const resolvers = {
             const orderByDate = await Order.find({
                 "purchaseDate":
                     { $gte: startTime, $lte: endTime }
-                })
+            })
                 .populate('products')
                 .populate({
                     path: 'products',
@@ -156,8 +156,16 @@ const resolvers = {
                     }
                 });
 
-            console.log('Order By Date: ',orderByDate)
-            return orderByDate;
+            const formattedOrderByDate = orderByDate.map(order => ({
+                ...order._doc,
+                purchaseDate: new Date(order.purchaseDate).toLocaleString('en-US', {
+                    timeZone: 'America/New_York'
+                })
+            }));
+
+            console.log(formattedOrderByDate);
+
+            return formattedOrderByDate;
         }
     },
     Mutation: {
@@ -271,20 +279,6 @@ const resolvers = {
                 console.log(err);
                 throw new AuthenticationError("Failed to remove product. resolvers.js file line 119")
             }
-            // try{ 
-            //     if (context.user) {
-            //         const removedProduct = await Product.findOneAndDelete({
-            //             _id: _id,
-            //             name: name,
-            //             owner: context.user._id,
-            //         }).populate('category');
-
-            //         return removedProduct;
-            //     }
-            // } catch(err) {
-            //     console.log(err);
-            //     throw new AuthenticationError("Failed to remove Product. resolvers.js.removeproduct.line128")
-            // }
         },
         //works
         addCategory: async (parent, { categoryInput }, context) => {
