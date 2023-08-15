@@ -1,24 +1,11 @@
 import decode from 'jwt-decode';
 
 class AuthService {
-    getToken() {
-        return localStorage.getItem('id_token');
-    }
-
-    login(id_token) {
-        localStorage.setItem('id_token', id_token);
-        window.location.assign('/');
-    }
 
     loggedIn() {
         const token = this.getToken();
         console.log(token);
-        return token && !this.isTokenExpired(token);
-    }
-
-    logout() {
-        localStorage.removeItem('id_token');
-        window.location.reload();
+        return token && !this.isTokenExpired(token) ? true : false;
     }
 
     isAdmin() {
@@ -41,6 +28,20 @@ class AuthService {
         console.log("Toekn is not expired.");
         return false;
     }
-};
+
+    getToken() {
+        return localStorage.getItem('id_token');
+    }
+
+    login(id_token) {
+        localStorage.setItem('id_token', id_token);
+        window.location.assign('/');
+    }
+
+    logout() {
+        localStorage.removeItem('id_token');
+        window.location.reload();
+    }
+}
 
 export default new AuthService();
