@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+// import logo from './logo.svg';
 import './App.css';
 
 import {
@@ -6,11 +6,15 @@ import {
   InMemoryCache,
   ApolloProvider,
   createHttpLink
-} from '@apollo-client';
+} from '@apollo/client';
 
 import { setContext } from '@apollo/client/link/context';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { BrowserRouter as HashRouter, Routes, Route } from 'react-router-dom';
+import { Container } from 'react-bootstrap'
+// import { Link } from 'react-router-dom';
+
+import Header from './components/Header';
+import Home from './pages/Home';
 
 const httpLink = createHttpLink({
   uri: '/grpahql'
@@ -19,7 +23,7 @@ const httpLink = createHttpLink({
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem("id_token");
   return {
-    headres: {
+    headers: {
       ...headers,
       authorization: token ? `Bearer ${token}` : "",
     },
@@ -39,12 +43,12 @@ function App() {
           <Header />
           <Container>
             <Routes>
-              {/* <Route path='/' element={} />
-              <Route path='/' element={} />
+              <Route path='/' element={<Home />} />
+              {/*<Route path='/' element={} />
               <Route path='/' element={} /> */}
             </Routes>
           </Container>
-          <Footer />
+          {/* <Footer /> */}
         </div>
       </HashRouter>
     </ApolloProvider>
